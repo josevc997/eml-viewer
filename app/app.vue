@@ -43,12 +43,15 @@ const handleFileChange = (event: Event) => {
     <h2 class="text-xl font-bold">{{ data?.subject }}</h2>
     <p v-if="data" class="mb-4">
       From: {{ data?.from.name }} <{{ data?.from.email }}><br />
-      To names: <template v-for="to in data?.to">
-        {{ to.name || to.email.split('<')[0] }}, 
-      </template><br />
-      To emails: <template v-for="to in data?.to">
-        <span class="underline text-blue-500">{{ to.email.split('<')[1]?.slice(0, -1) || to.email }}</span>,  
-      </template><br />
+      <template v-if="Array.isArray(data?.to)">
+        To names: <template v-for="to in data?.to">
+          {{ to.name || (to.email && to.email.includes('<') ? to.email.split('<')[0] : "") }}, 
+        </template><br />
+        To emails: <template v-for="to in data?.to">
+          <span class="underline text-blue-500">{{ to.email && to.email.includes('<') ? to.email.split('<')[1]?.slice(0, -1) : to.email }}</span>,  
+        </template><br />
+      </template>
+      To: {{ data?.to.email }}<br />
       Date: {{ data?.date }}
     </p>
     <div>
@@ -56,7 +59,7 @@ const handleFileChange = (event: Event) => {
         v-if="data && data.bodyHtml"
         class="relative email-body border rounded border-slate-400/60 p-6"
       >
-        <h v-html="data.bodyHtml"></h>
+        <div v-html="data.bodyHtml" />
       </div>
     </div>
     <div
