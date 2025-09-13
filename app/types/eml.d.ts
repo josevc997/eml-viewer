@@ -71,7 +71,7 @@ interface EmlReaded {
   date: string;
   subject: string;
   from: UserEmail;
-  to: UserEmail[];
+  to: UserEmail[] | UserEmail;
   headers: EmlHeaders;
   attachments: EmlAttachment[];
 }
