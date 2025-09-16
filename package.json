@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.1.13",
     "buffer": "^6.0.3",
     "eml-format": "^0.6.1",
+    "lucide-vue-next": "^0.544.0",
     "nuxt": "^4.1.1",
     "tailwindcss": "^4.1.13",
     "vue": "^3.5.21",

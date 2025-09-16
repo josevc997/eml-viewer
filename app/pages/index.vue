@@ -4,8 +4,10 @@ import { Buffer } from "buffer";
 const data = ref<null | EmlReadedUpdated>(null);
 const emlFileInput = ref<HTMLInputElement | null>(null);
 
+const readingFile = ref(false);
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
+  readingFile.value = true;
   if (input.files && input.files[0]) {
     const file = input.files[0];
     const reader = new FileReader();
@@ -14,9 +16,13 @@ const handleFileChange = (event: Event) => {
         $fetch<EmlReadedUpdated>("/api/eml-parse", {
           method: "POST",
           body: { data: e.target.result },
-        }).then((response: EmlReadedUpdated) => {
-          data.value = response;
-        });
+        })
+          .then((response: EmlReadedUpdated) => {
+            data.value = response;
+          })
+          .finally(() => {
+            readingFile.value = false;
+          });
       }
     };
     reader.readAsText(file);
@@ -62,7 +68,7 @@ const clearEml = () => {
         @drop="handleDrop"
         @dragover="handleDragOver"
       >
-        <div class="!flex !flex-col !w-fit !gap-2">
+        <div v-if="!readingFile" class="!flex !flex-col !w-fit !gap-2">
           <div class="!flex !gap-4">
             <div
               class="!shadow-lg !px-2 !flex !items-center !outline-2 !outline-slate-400/10"
@@ -79,6 +85,10 @@ const clearEml = () => {
           >
             Or click to choose a file
           </p>
+        </div>
+        <div v-else class="!flex !flex-col !w-fit !gap-2">
+          <icon-loading class="!animate-spin !text-slate-600 !text-7xl" />
+          <p class="!font-semibold !text-slate-600">Cargando...</p>
         </div>
       </div>
       <input
@@ -122,6 +132,7 @@ const clearEml = () => {
     >
       clear
     </button>
+    <attachment-section v-if="data?.attachments?.length" :attachments="data?.attachments" />
     <div
       class="!relative !email-body !border !rounded !border-slate-400/60 !p-6 overflow-x-auto"
       v-if="data && data.bodyHtml"
@@ -130,53 +141,28 @@ const clearEml = () => {
         <div v-html="data.bodyHtml" />
       </div>
     </div>
-    <div
-      v-for="(attachment, index) in data?.attachments"
-      :key="index"
-      class="!mt-6 !p-4 !border !rounded !border-slate-400/60"
-    >
-      <h2>{{ attachment.name || `Attachment ${index + 1}` }}</h2>
-      <template v-if="attachment.contentType?.startsWith('image/')">
-        <img
-          :src="`data:${attachment.contentType};base64,${Buffer.from(
-            attachment.data
-          ).toString('base64')}`"
-          :alt="attachment.name || 'Attachment Image'"
-        />
-      </template>
-      <a
-        v-else
-        :href="`data:${attachment.contentType};base64,${Buffer.from(
-          attachment.data
-        ).toString('base64')}`"
-        :download="attachment.name || `attachment-${index + 1}`"
-        class="!bg-gradient-to-b !from-slate-700 !to-slate-600 !rounded !px-2 !py-1 !text-white !mb-4 !font-medium !border-b-slate-500 !border-b !inline-block !mt-2"
-      >
-        Download
-      </a>
-    </div>
     <div class="!gap-4 !grid !grid-cols-1 !text-slate-600 !mt-6">
       <p>
-        EML VIEWER es una herramienta web diseñada para que usuarios puedan subir
-        archivos con extensión .eml y ver de forma clara y transparente su
+        EML VIEWER es una herramienta web diseñada para que usuarios puedan
+        subir archivos con extensión .eml y ver de forma clara y transparente su
         contenido. Un archivo EML guarda todo lo que compone un correo
-        electrónico: encabezados (“headers”) como remitente, destinatario, asunto,
-        fecha y hora; el cuerpo del mensaje en texto plano o en HTML; y también
-        los archivos adjuntos que acompañaban al correo. Con EML VIEWER no
-        necesitas un cliente de correo electrónico instalado — basta con subir el
-        archivo para que la aplicación lo procese, lo muestre estructurado y
-        permita visualizar el mensaje completo, sus meta-datos y los adjuntos en
-        su forma original.
+        electrónico: encabezados (“headers”) como remitente, destinatario,
+        asunto, fecha y hora; el cuerpo del mensaje en texto plano o en HTML; y
+        también los archivos adjuntos que acompañaban al correo. Con EML VIEWER
+        no necesitas un cliente de correo electrónico instalado — basta con
+        subir el archivo para que la aplicación lo procese, lo muestre
+        estructurado y permita visualizar el mensaje completo, sus meta-datos y
+        los adjuntos en su forma original.
       </p>
       <p>
         Además, esta web está pensada para quienes necesitan revisar correos
         guardados, ya sea para archivar, para auditorías, para recuperación de
         información, o simplemente para leer mensajes exportados de servicios de
         correo. El visor permite distinguir entre la vista en texto plano y la
-        vista en HTML, revisar los detalles técnicos (como el camino que siguió el
-        mensaje, autenticaciones, pasajes MIME, etc.), y extraer o descargar los
-        archivos adjuntos incluidos. EML VIEWER convierte lo que puede ser un
-        archivo difícil de interpretar en una lectura ordenada y accesible,
+        vista en HTML, revisar los detalles técnicos (como el camino que siguió
+        el mensaje, autenticaciones, pasajes MIME, etc.), y extraer o descargar
+        los archivos adjuntos incluidos. EML VIEWER convierte lo que puede ser
+        un archivo difícil de interpretar en una lectura ordenada y accesible,
         manteniendo la máxima fidelidad al correo original.
       </p>
     </div>

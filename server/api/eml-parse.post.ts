@@ -71,7 +71,6 @@ const replaceAttachedImages = (
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   let parsedEml = await readFile(body.data);
-  console.log(parsedEml);
   
   if (!parsedEml) {
     throw createError({
